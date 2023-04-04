@@ -103,7 +103,7 @@ public class OwnerRepository : IOwnerRepository
                         Email = reader.GetString(reader.GetOrdinal("Email")),
                         Name = reader.GetString(reader.GetOrdinal("Name")),
                         Address = reader.GetString(reader.GetOrdinal("Address")),
-                        Phone = reader.GetString(reader.GetOrdinal("Phone")),dd
+                        Phone = reader.GetString(reader.GetOrdinal("Phone")),
                         NeighborhoodId = reader.GetInt32(reader.GetOrdinal("NeighborhoodId")),
                         Neighborhood = new Neighborhood()
                         {
