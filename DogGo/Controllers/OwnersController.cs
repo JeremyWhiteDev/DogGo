@@ -2,6 +2,7 @@
 using DogGo.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 
 namespace DogGo.Controllers
 {
@@ -43,15 +44,18 @@ namespace DogGo.Controllers
         // POST: Owners/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public ActionResult Create(Owner owner)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                _ownerRepo.AddOwner(owner);
+                return RedirectToAction("Index");
             }
-            catch
+            catch(SqlException ex)
             {
-                return View();
+                //go to Owners/Create view to see how error is displayed to user using window.onload
+                TempData["UserMessage"] =  "A database error occured: " + ex.Message;
+                return View(owner);
             }
         }
 
@@ -79,21 +83,26 @@ namespace DogGo.Controllers
         // GET: Owners/Delete/5
         public ActionResult Delete(int id)
         {
-            return View();
+
+            Owner owner = _ownerRepo.GetOwnerById(id);
+            if (owner == null) return NoContent();
+            return View(owner);
         }
 
         // POST: Owners/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public ActionResult Delete(int id, Owner owner)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                _ownerRepo.DeleteOwner(id);
+
+                return RedirectToAction("Index");
             }
-            catch
+            catch(Exception ex)
             {
-                return View();
+                return View(owner);
             }
         }
     }
