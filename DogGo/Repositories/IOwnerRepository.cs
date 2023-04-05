@@ -1,4 +1,5 @@
 ﻿using DogGo.Models;
+using DogGo.Models.ViewModels;
 
 namespace DogGo.Repositories
 {
@@ -10,5 +11,6 @@ namespace DogGo.Repositories
         void AddOwner(Owner owner);
         void UpdateOwner(Owner owner);
         void DeleteOwner(int ownerId);
+        OwnerFormViewModel GetOwnerByIdWithAllNeighborhoods(int id);
     }
 }

@@ -3,97 +3,134 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 
-namespace DogGo.Repositories
+namespace DogGo.Repositories;
+
+public class WalkerRepository : IWalkerRepository
 {
-    public class WalkerRepository : IWalkerRepository
+    private readonly IConfiguration _config;
+
+    // The constructor accepts an IConfiguration object as a parameter. This class comes from the ASP.NET framework and is useful for retrieving things out of the appsettings.json file like connection strings.
+    public WalkerRepository(IConfiguration config)
     {
-        private readonly IConfiguration _config;
+        _config = config;
+    }
 
-        // The constructor accepts an IConfiguration object as a parameter. This class comes from the ASP.NET framework and is useful for retrieving things out of the appsettings.json file like connection strings.
-        public WalkerRepository(IConfiguration config)
+    public SqlConnection Connection
+    {
+        get
         {
-            _config = config;
+            return new SqlConnection(_config.GetConnectionString("DefaultConnection"));
         }
+    }
 
-        public SqlConnection Connection
+    public List<Walker> GetAllWalkers()
+    {
+        using (SqlConnection conn = Connection)
         {
-            get
+            conn.Open();
+            using (SqlCommand cmd = conn.CreateCommand())
             {
-                return new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            }
-        }
-
-        public List<Walker> GetAllWalkers()
-        {
-            using (SqlConnection conn = Connection)
-            {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = @"
+                cmd.CommandText = @"
                         SELECT Id, [Name], ImageUrl, NeighborhoodId
                         FROM Walker
                     ";
 
-                    SqlDataReader reader = cmd.ExecuteReader();
+                SqlDataReader reader = cmd.ExecuteReader();
 
-                    List<Walker> walkers = new List<Walker>();
-                    while (reader.Read())
+                List<Walker> walkers = new List<Walker>();
+                while (reader.Read())
+                {
+                    Walker walker = new Walker
                     {
-                        Walker walker = new Walker
-                        {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            Name = reader.GetString(reader.GetOrdinal("Name")),
-                            ImageUrl = reader.GetString(reader.GetOrdinal("ImageUrl")),
-                            NeighborhoodId = reader.GetInt32(reader.GetOrdinal("NeighborhoodId"))
-                        };
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Name = reader.GetString(reader.GetOrdinal("Name")),
+                        ImageUrl = reader.GetString(reader.GetOrdinal("ImageUrl")),
+                        NeighborhoodId = reader.GetInt32(reader.GetOrdinal("NeighborhoodId"))
+                    };
 
-                        walkers.Add(walker);
-                    }
-
-                    reader.Close();
-
-                    return walkers;
+                    walkers.Add(walker);
                 }
+
+                reader.Close();
+
+                return walkers;
             }
         }
+    }
 
-        public Walker GetWalkerById(int id)
+    public Walker GetWalkerById(int id)
+    {
+        using (SqlConnection conn = Connection)
         {
-            using (SqlConnection conn = Connection)
+            conn.Open();
+            using (SqlCommand cmd = conn.CreateCommand())
             {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = @"
+                cmd.CommandText = @"
                         SELECT Id, [Name], ImageUrl, NeighborhoodId
                         FROM Walker
                         WHERE Id = @id
                     ";
 
-                    cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@id", id);
 
-                    SqlDataReader reader = cmd.ExecuteReader();
+                SqlDataReader reader = cmd.ExecuteReader();
 
-                    if (reader.Read())
+                if (reader.Read())
+                {
+                    Walker walker = new Walker
                     {
-                        Walker walker = new Walker
-                        {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            Name = reader.GetString(reader.GetOrdinal("Name")),
-                            ImageUrl = reader.GetString(reader.GetOrdinal("ImageUrl")),
-                            NeighborhoodId = reader.GetInt32(reader.GetOrdinal("NeighborhoodId"))
-                        };
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Name = reader.GetString(reader.GetOrdinal("Name")),
+                        ImageUrl = reader.GetString(reader.GetOrdinal("ImageUrl")),
+                        NeighborhoodId = reader.GetInt32(reader.GetOrdinal("NeighborhoodId"))
+                    };
 
-                        reader.Close();
-                        return walker;
-                    }
-                    else
-                    {
-                        reader.Close();
-                        return null;
-                    }
+                    reader.Close();
+                    return walker;
                 }
+                else
+                {
+                    reader.Close();
+                    return null;
+                }
+            }
+        }
+    }
+
+    public List<Walker> GetWalkersInNeighborhood(int neighborhoodId)
+    {
+        using (SqlConnection conn = Connection)
+        {
+            conn.Open();
+            using (SqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+                SELECT Id, [Name], ImageUrl, NeighborhoodId
+                FROM Walker
+                WHERE NeighborhoodId = @neighborhoodId
+            ";
+
+                cmd.Parameters.AddWithValue("@neighborhoodId", neighborhoodId);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                List<Walker> walkers = new List<Walker>();
+                while (reader.Read())
+                {
+                    Walker walker = new Walker
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Name = reader.GetString(reader.GetOrdinal("Name")),
+                        ImageUrl = reader.GetString(reader.GetOrdinal("ImageUrl")),
+                        NeighborhoodId = reader.GetInt32(reader.GetOrdinal("NeighborhoodId"))
+                    };
+
+                    walkers.Add(walker);
+                }
+
+                reader.Close();
+
+                return walkers;
             }
         }
     }
